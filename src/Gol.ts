@@ -13,6 +13,7 @@ export interface TagConfigs {
 
 export interface Configs {
   showTime: boolean;
+  withStyles: boolean;
   showLevelLabel: boolean;
   styles: {
     [key in LogLevel]: TagConfigs;
@@ -22,6 +23,7 @@ export interface Configs {
 const defaultConfigs: Configs = {
   showTime: true,
   showLevelLabel: true,
+  withStyles: true,
   styles: {
     Critical: {
       color: "white",
@@ -88,24 +90,36 @@ export class Gol {
     if (canLog(loglevel, this.currentLoglevel)) {
       const date = new Date();
       const outputTime = this.configs.showTime
-        ? `[${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}.${date.getMilliseconds()}]`
+        ? `[${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}.${date
+            .getMilliseconds()
+            .toString()
+            .padEnd(3, "0")}]`
         : "";
-      console.log(
-        `${outputTime} %c${
-          this.configs.showLevelLabel ? loglevel : " "
-        }: %c${tag}`,
-        `background-color: ${tagConfigs.backgroundColor};
+      if (this.configs.withStyles) {
+        console.log(
+          `${outputTime} %c${
+            this.configs.showLevelLabel ? loglevel : " "
+          }: %c${tag}`,
+          `background-color: ${tagConfigs.backgroundColor};
          color: ${tagConfigs.color};
          font-weight: bold;
          ${this.defaultStyle}
         `,
-        `background-color: ${tagConfigs.backgroundColor}55;
+          `background-color: ${tagConfigs.backgroundColor}55;
          color: black;
          font-weight: normal;
          ${this.defaultStyle}
         `,
-        ...args
-      );
+          ...args
+        );
+      } else {
+        console.log(
+          `${outputTime} [${
+            this.configs.showLevelLabel ? loglevel : " "
+          }: ${tag}]`,
+          ...args
+        );
+      }
       this.callback?.(outputTime, loglevel, tag, ...args);
     }
   };

@@ -1,6 +1,6 @@
 import { Gol, LogLevel } from "gol";
 
-const gol = new Gol(LogLevel.Debug, {});
+const gol = new Gol(LogLevel.Debug, { withStyles: false });
 
 const logger = gol.getLogger("Module A");
 
