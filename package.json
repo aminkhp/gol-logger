@@ -6,10 +6,12 @@
   "license": "MIT",
   "scripts": {
     "build": "tsc",
-    "build:watch": "tsc --watch"
+    "build:watch": "tsc --watch",
+    "postbuild": "rm -f dist/tsconfig.tsbuildinfo",
+    "prepublishOnly": "yarn run build"
   },
   "files": [
-    "./dist"
+    "dist"
   ],
   "devDependencies": {
     "typescript": "^4"
