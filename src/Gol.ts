@@ -135,26 +135,26 @@ export class Gol {
   };
 }
 
-
 export class Logger {
   constructor(private tag: string, private gol: Gol) {}
 
-  critical(...args: any[]) {
+  critical = (...args: any[]) => {
     this.gol.critical(this.tag, ...args);
-  }
-  error(...args: any[]) {
+  };
+
+  error = (...args: any[]) => {
     this.gol.error(this.tag, ...args);
-  }
+  };
 
-  warn(...args: any[]) {
+  warn = (...args: any[]) => {
     this.gol.warn(this.tag, ...args);
-  }
+  };
 
-  info(...args: any[]) {
+  info = (...args: any[]) => {
     this.gol.info(this.tag, ...args);
-  }
+  };
 
-  debug(...args: any[]) {
+  debug = (...args: any[]) => {
     this.gol.debug(this.tag, ...args);
-  }
+  };
 }

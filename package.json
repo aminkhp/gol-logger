@@ -1,6 +1,6 @@
 {
-  "name": "gol",
-  "version": "1.0.0",
+  "name": "gol-logger",
+  "version": "0.1.1",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "license": "MIT",
