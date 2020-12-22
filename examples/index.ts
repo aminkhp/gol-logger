@@ -1,31 +1,17 @@
-import Gol from "../index.ts";
+import { Gol, LogLevel } from "gol";
 
-const logger = new Gol("Debug", {
-  withSymbols: true
-});
+const gol = new Gol(LogLevel.Debug, {});
 
-logger.critical('test', "WAAAAAY!", {a: 1})
-logger.warn('not', "AHHH");
-logger.warn('not', "AHHH");
-logger.debug('chick', "EMMM");
+const logger = gol.getLogger("Module A");
 
-logger.error('some', "OHHH");
-logger.info('fono', "EEHEM");
+gol.critical("module a", "WAAAAAY!");
+gol.error("component x", "oppes");
+gol.warn("file", "not found");
+gol.info("api", "request c");
+gol.debug("db", "data");
 
-logger.warn('not', "AHHH");
-logger.debug('chick', "EMMM");
-logger.debug('chick', "EMMM");
-
-logger.info('fono', "EEHEM");
-logger.info('fono', "EEHEM");
-logger.info('fono', "EEHEM");
-logger.critical('test', "WAAAAAY!", {a: 1})
-
-logger.info('fono', "EEHEM");
-
-logger.debug('chick', "EMMM");
-logger.error('some', "OHHH");
-logger.error('some', "OHHH");
-logger.debug('chick', "EMMM");
-logger.debug('chick', "EMMM");
-logger.debug('chick', "EMMM");
+logger.critical("module a", "WAAAAAY!");
+logger.error("component x", "oppes");
+logger.warn("file", "not found");
+logger.info("api", "request c");
+logger.debug("db", "data", { a: 1 });

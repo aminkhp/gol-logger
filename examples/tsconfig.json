@@ -1,0 +1,15 @@
+{
+  "compilerOptions": {
+    "target": "ESNext",
+    "module": "ESNext",
+    "strict": true,
+    "noEmitOnError": true,
+    "moduleResolution": "node",
+    "composite": true
+  },
+  "references": [
+    {
+      "path": "../"
+    }
+  ]
+}
