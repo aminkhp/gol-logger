@@ -88,18 +88,10 @@ export class Gol {
     args: any[]
   ) => {
     if (canLog(loglevel, this.currentLoglevel)) {
-      const date = new Date();
-      const outputTime = this.configs.showTime
-        ? `[${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}.${date
-            .getMilliseconds()
-            .toString()
-            .padEnd(3, "0")}]`
-        : "";
+      const time = this.getTime();
       if (this.configs.withStyles) {
         console.log(
-          `${outputTime} %c${
-            this.configs.showLevelLabel ? loglevel : " "
-          }: %c${tag}`,
+          `${time} %c${this.configs.showLevelLabel ? loglevel : " "}: %c${tag}`,
           `background-color: ${tagConfigs.backgroundColor};
          color: ${tagConfigs.color};
          font-weight: bold;
@@ -114,15 +106,26 @@ export class Gol {
         );
       } else {
         console.log(
-          `${outputTime} [${
-            this.configs.showLevelLabel ? loglevel : " "
-          }: ${tag}]`,
+          `${time} [${this.configs.showLevelLabel ? loglevel : " "}: ${tag}]`,
           ...args
         );
       }
-      this.callback?.(outputTime, loglevel, tag, ...args);
+      this.callback?.(time, loglevel, tag, ...args);
     }
   };
+
+  private getTime() {
+    const date = new Date();
+    const hours = date.getHours();
+    const minutes = date.getMinutes().toString().padStart(2, "0");
+    const seconds = date.getSeconds().toString().padStart(2, "0");
+    const milliseconds = date.getMilliseconds().toString().padEnd(3, "0");
+    
+    const outputTime = this.configs.showTime
+      ? `[${hours}:${minutes}:${seconds}.${milliseconds}]`
+      : "";
+    return outputTime;
+  }
 
   public getLogger(tag: string): Logger {
     return new Logger(tag, this);
