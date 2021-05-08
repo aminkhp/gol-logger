@@ -68,16 +68,17 @@ export type LogCallback = (
 ) => void;
 
 export class Gol {
-  private currentLoglevel: LogLevel;
   private configs: Configs;
-  private defaultStyle = "padding: 2px 4px;";
+  private readonly defaultStyle = "padding: 2px 4px;";
+
+  public disable = false;
 
   constructor(
-    loglevel: LogLevel,
+    public loglevel: LogLevel = LogLevel.Debug,
     configs?: Partial<Configs>,
     private callback?: LogCallback
   ) {
-    this.currentLoglevel = loglevel;
+    this.loglevel = loglevel;
     this.configs = Object.assign(defaultConfigs, configs);
   }
 
@@ -87,21 +88,13 @@ export class Gol {
     tagConfigs: TagConfigs,
     args: any[]
   ) => {
-    if (canLog(loglevel, this.currentLoglevel)) {
+    if (!this.disable && canLog(loglevel, this.loglevel)) {
       const time = this.getTime();
       if (this.configs.withStyles) {
         console.log(
           `${time} %c${this.configs.showLevelLabel ? loglevel : " "}: %c${tag}`,
-          `background-color: ${tagConfigs.backgroundColor};
-         color: ${tagConfigs.color};
-         font-weight: bold;
-         ${this.defaultStyle}
-        `,
-          `background-color: ${tagConfigs.backgroundColor}55;
-         color: black;
-         font-weight: normal;
-         ${this.defaultStyle}
-        `,
+          this.getLogLevelStyles(tagConfigs),
+          this.getTagStyles(tagConfigs),
           ...args
         );
       } else {
@@ -120,15 +113,35 @@ export class Gol {
     const minutes = date.getMinutes().toString().padStart(2, "0");
     const seconds = date.getSeconds().toString().padStart(2, "0");
     const milliseconds = date.getMilliseconds().toString().padEnd(3, "0");
-    
+
     const outputTime = this.configs.showTime
       ? `[${hours}:${minutes}:${seconds}.${milliseconds}]`
       : "";
     return outputTime;
   }
 
+  private getLogLevelStyles(tagConfigs: TagConfigs) {
+    return `background-color: ${tagConfigs.backgroundColor};
+    color: ${tagConfigs.color};
+    font-weight: bold;
+    ${this.defaultStyle}
+   `;
+  }
+
+  private getTagStyles(tagConfigs: TagConfigs) {
+    return `background-color: ${tagConfigs.backgroundColor}55;
+    color: black;
+    font-weight: normal;
+    ${this.defaultStyle}
+   `;
+  }
+
   public getLogger(tag: string): Logger {
     return new Logger(tag, this);
+  }
+
+  public changeLevel(level: LogLevel) {
+    this.loglevel = level;
   }
 
   critical = (tag: string, ...args: any[]) => {
