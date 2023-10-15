@@ -5,7 +5,8 @@
     "strict": true,
     "noEmitOnError": true,
     "moduleResolution": "node",
-    "composite": true
+    "composite": true,
+    "types": [ "@types/wicg-file-system-access"]
   },
   "references": [
     {

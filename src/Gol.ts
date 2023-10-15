@@ -1,3 +1,9 @@
+import { FileStore } from "./file_store";
+import { IdbStore, StoreConfig } from "./idb_store";
+import { debugMode } from "./log";
+import { LogsStore } from "./store";
+import { formatTime } from "./utils";
+
 export enum LogLevel {
   Critical = "Critical",
   Error = "Error",
@@ -11,19 +17,24 @@ export interface TagConfigs {
   backgroundColor: string;
 }
 
-export interface Configs {
+export type Configs = {
   showTime: boolean;
   withStyles: boolean;
   showLevelLabel: boolean;
+  persist: boolean;
+  debug: boolean;
   styles: {
     [key in LogLevel]: TagConfigs;
   };
-}
+  maxFileSize?: number;
+} & Partial<StoreConfig>;
 
 const defaultConfigs: Configs = {
   showTime: true,
   showLevelLabel: true,
   withStyles: true,
+  persist: false,
+  debug: false,
   styles: {
     Critical: {
       color: "white",
@@ -60,17 +71,12 @@ const canLog = (tag: LogLevel, loglevel: LogLevel): boolean => {
   return LOG_LEVELS.indexOf(tag) >= LOG_LEVELS.indexOf(loglevel);
 };
 
-export type LogCallback = (
-  time: string,
-  level: LogLevel,
-  tag: string,
-  ...args: any[]
-) => void;
+export type LogCallback = (time: string, level: LogLevel, tag: string, ...args: any[]) => void;
 
 export class Gol {
   private configs: Configs;
   private readonly defaultStyle = "padding: 2px 4px;";
-
+  private db?: LogsStore;
   public disable = false;
 
   constructor(
@@ -80,16 +86,25 @@ export class Gol {
   ) {
     this.loglevel = loglevel;
     this.configs = Object.assign(defaultConfigs, configs);
+    debugMode.value = this.configs.debug;
+
+    if (configs?.persist) {
+      if ("storage" in navigator && "getDirectory" in navigator.storage) {
+        this.db = new FileStore();
+      } else {
+        this.db = new IdbStore("gol", {
+          expireTime: this.configs.expireTime,
+          maxCount: this.configs.maxCount,
+        });
+      }
+      this.db.init();
+    }
   }
 
-  private log = (
-    loglevel: LogLevel,
-    tag: string,
-    tagConfigs: TagConfigs,
-    args: any[]
-  ) => {
+  private log = (loglevel: LogLevel, tag: string, tagConfigs: TagConfigs, args: any[]) => {
     if (!this.disable && canLog(loglevel, this.loglevel)) {
-      const time = this.getTime();
+      const date = new Date();
+      const time = this.formatTime(date);
       if (this.configs.withStyles) {
         console.log(
           `${time} %c${this.configs.showLevelLabel ? loglevel : " "}: %c${tag}`,
@@ -98,26 +113,15 @@ export class Gol {
           ...args
         );
       } else {
-        console.log(
-          `${time} [${this.configs.showLevelLabel ? loglevel : " "}: ${tag}]`,
-          ...args
-        );
+        console.log(`${time} [${this.configs.showLevelLabel ? loglevel : " "}: ${tag}]`, ...args);
       }
+      this.db?.save(date.getTime(), tag, loglevel, args);
       this.callback?.(time, loglevel, tag, ...args);
     }
   };
 
-  private getTime() {
-    const date = new Date();
-    const hours = date.getHours();
-    const minutes = date.getMinutes().toString().padStart(2, "0");
-    const seconds = date.getSeconds().toString().padStart(2, "0");
-    const milliseconds = date.getMilliseconds().toString().padEnd(3, "0");
-
-    const outputTime = this.configs.showTime
-      ? `[${hours}:${minutes}:${seconds}.${milliseconds}]`
-      : "";
-    return outputTime;
+  private formatTime(date: Date) {
+    return this.configs.showTime ? formatTime(date) : "";
   }
 
   private getLogLevelStyles(tagConfigs: TagConfigs) {
@@ -162,6 +166,14 @@ export class Gol {
 
   debug = (tag: string, ...args: any[]) => {
     this.log(LogLevel.Debug, tag, this.configs.styles.Debug, args);
+  };
+
+  report = () => {
+    return this.db?.report();
+  };
+
+  clean = () => {
+    return this.db?.clean();
   };
 }
 

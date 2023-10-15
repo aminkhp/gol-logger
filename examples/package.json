@@ -1,16 +1,22 @@
 {
   "name": "examples",
   "version": "1.0.0",
-  "main": "index.js",
   "license": "MIT",
+  "source": "index.html",
+  "browserslist": [
+    "last 1 Chrome version"
+  ],
   "scripts": {
-    "dev": "parcel serve index.html -p 1235"
+    "dev": "vite",
+    "build": "vite build"
   },
   "devDependencies": {
-    "@babel/core": "^7.12.10",
-    "@babel/preset-env": "^7.12.11",
-    "babel-preset-env": "^1.7.0",
-    "parcel-bundler": "^1.12.4",
-    "typescript": "^4.1.3"
+    "@types/wicg-file-system-access": "^2023.10.2",
+    "typescript": "^5",
+    "vite": "^4.5.0"
+  },
+  "dependencies": {
+    "@faker-js/faker": "^8.2.0",
+    "gol-logger": "file:../"
   }
 }

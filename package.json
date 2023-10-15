@@ -1,6 +1,6 @@
 {
   "name": "gol-logger",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "license": "MIT",
@@ -14,6 +14,9 @@
     "dist"
   ],
   "devDependencies": {
-    "typescript": "^4"
+    "typescript": "^5"
+  },
+  "dependencies": {
+    "idb": "^7.1.1"
   }
 }
