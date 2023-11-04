@@ -16,3 +16,15 @@ export function getFilename(date: Date | string, part: number) {
 
   return `${getBaseFilename(date)}(${part}).log`;
 }
+
+// assign<T extends {}, U>(target: T, source: U): T & U
+export function trueAssign<T>(target: T, source?: Partial<T>): T {
+  if (!source) return target;
+  for (const key in source) {
+    if (source[key] != null) {
+      target[key] = source[key]!;
+    }
+  }
+
+  return target;
+}

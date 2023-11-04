@@ -1,8 +1,8 @@
 import { FileStore } from "./file_store";
 import { IdbStore, StoreConfig } from "./idb_store";
-import { debugMode } from "./log";
+import { debug, debugMode } from "./log";
 import { LogsStore } from "./store";
-import { formatTime } from "./utils";
+import { formatTime, trueAssign } from "./utils";
 
 export enum LogLevel {
   Critical = "Critical",
@@ -79,26 +79,41 @@ export class Gol {
   private db?: LogsStore;
   public disable = false;
 
+  private static instance: Gol;
+
   constructor(
     public loglevel: LogLevel = LogLevel.Debug,
     configs?: Partial<Configs>,
     private callback?: LogCallback
   ) {
     this.loglevel = loglevel;
-    this.configs = Object.assign(defaultConfigs, configs);
+    this.configs = trueAssign(defaultConfigs, configs);
     debugMode.value = this.configs.debug;
+    debug("gol new", loglevel, configs);
 
     if (configs?.persist) {
       if ("storage" in navigator && "getDirectory" in navigator.storage) {
-        this.db = new FileStore();
+        this.db = FileStore.getInstance({ expireDay: 2, maxFileSize: this.configs.maxFileSize });
       } else {
-        this.db = new IdbStore("gol", {
+        this.db = IdbStore.getInstance("gol", {
           expireTime: this.configs.expireTime,
           maxCount: this.configs.maxCount,
         });
       }
       this.db.init();
     }
+  }
+
+  public static getInstance(
+    loglevel: LogLevel = LogLevel.Debug,
+    configs?: Partial<Configs>,
+    callback?: LogCallback
+  ) {
+    if (!Gol.instance) {
+      Gol.instance = new Gol(loglevel, configs, callback);
+    }
+
+    return Gol.instance;
   }
 
   private log = (loglevel: LogLevel, tag: string, tagConfigs: TagConfigs, args: any[]) => {

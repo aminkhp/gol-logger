@@ -1,7 +1,7 @@
 import { debug } from "./log";
 import { getFilename } from "./utils";
 
-const fileNameRegex = /([\d-]+)\((\d+)\)\.log/;
+const fileNameRegex = /^([\d-]+)\((\d+)\)\.log$/;
 
 export class FileStream {
   private queue: string[] = [];

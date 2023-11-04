@@ -2,7 +2,7 @@ import { LogLevel } from "./Gol";
 import { FileStream, LogsPack } from "./file_stream";
 import { debug } from "./log";
 import { Log, LogsStore } from "./store";
-import { formatTime, getBaseFilename, getFilename } from "./utils";
+import { formatTime, getBaseFilename, getFilename, trueAssign } from "./utils";
 
 const MB = 1e6;
 
@@ -17,7 +17,17 @@ export class FileStore implements LogsStore {
   private options: FileStoreOptions;
 
   constructor(options?: Partial<FileStoreOptions>) {
-    this.options = Object.assign({ maxFileSize: 10 * MB, expireDay: 2 }, options);
+    this.options = trueAssign({ maxFileSize: 10 * MB, expireDay: 2 }, options);
+    debug("filestore", this.options);
+  }
+
+  private static instance: FileStore;
+  public static getInstance(options?: Partial<FileStoreOptions>) {
+    if (!FileStore.instance) {
+      FileStore.instance = new FileStore(options);
+    }
+
+    return FileStore.instance;
   }
 
   async init(): Promise<void> {
@@ -42,6 +52,7 @@ export class FileStore implements LogsStore {
     const pack = new LogsPack(this.logsDir, todayFilename, this.options.maxFileSize);
     await pack.create();
 
+    debug("file store", this.queue);
     this.queue.forEach((log) => {
       pack.writeLine(this.formatLine(log.date, log.tag, log.level, log.args));
     });

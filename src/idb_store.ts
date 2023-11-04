@@ -1,7 +1,7 @@
 import { DBSchema, IDBPDatabase, IDBPTransaction, openDB } from "idb/with-async-ittr";
 import { LogLevel } from "./Gol";
 import { Log, LogsStore } from "./store";
-import { getFilename } from "./utils";
+import { getFilename, trueAssign } from "./utils";
 import { debug } from "./log";
 
 type Stores = ["logs", "metadata"];
@@ -57,14 +57,25 @@ export class IdbStore implements LogsStore {
   private inited = false;
   private cleaning: boolean = false;
   private config: StoreConfig;
+
   constructor(private name: string, options?: Partial<StoreConfig>) {
-    this.config = Object.assign(
+    this.config = trueAssign(
       {
         maxCount: 10_000,
         expireTime: Day1 / 2,
       },
       options
     );
+  }
+
+  private static instance: IdbStore;
+
+  public static getInstance(name: string, options?: Partial<StoreConfig>) {
+    if (!IdbStore.instance) {
+      IdbStore.instance = new IdbStore(name, options);
+    }
+
+    return IdbStore.instance;
   }
 
   async init() {
