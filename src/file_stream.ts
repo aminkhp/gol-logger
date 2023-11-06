@@ -31,7 +31,7 @@ export class FileStream {
     this.queue.forEach((data) => {
       this.currentStream!.write(data);
     });
-
+    this.queue = [];
     this.bufferCount = 0;
     this.isOpen = true;
     debug(">>>flush end");
