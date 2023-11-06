@@ -55,6 +55,10 @@ async function log() {
 async function main() {
   // await log();
 
+  for(let i = 0; i < 50; i++) {
+    gol.debug("start", i);
+  }
+  
   document.getElementById("add")!.addEventListener("click", () => {
     log();
   });

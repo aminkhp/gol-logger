@@ -41,6 +41,8 @@ export class FileStream {
     this.currentStream = await this.fileHandle.createWritable({
       keepExistingData: true,
     });
+    const file = await this.fileHandle.getFile();
+    this.currentStream.seek(file.size);
     this.isOpen = true;
     this.flushIntervalId = setInterval(() => {
       this.flush();
