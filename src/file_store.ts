@@ -31,6 +31,16 @@ export class FileStore implements LogsStore {
   }
 
   async init(): Promise<void> {
+    if (!navigator.storage || !("persist" in navigator.storage)) {
+      throw new Error("Persist is not available.");
+    }
+
+    const persistent = await navigator.storage.persist();
+    if (!persistent) {
+      throw new Error("persistent not allowed!");
+    }
+
+    debug("presistance", persistent);
     const root = await navigator.storage.getDirectory();
     this.logsDir = await root.getDirectoryHandle("logs", { create: true });
 
@@ -43,6 +53,8 @@ export class FileStore implements LogsStore {
 
     debug("init", todayFilename, yesterdayFilename);
     for await (const [name] of this.logsDir) {
+      const file = await (await this.logsDir.getFileHandle(name)).getFile();
+      debug("file", name, file.size);
       if (name.startsWith(todayFilename) || name.startsWith(yesterdayFilename)) continue;
 
       debug("remove entry", name);

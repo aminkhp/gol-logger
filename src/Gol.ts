@@ -76,7 +76,7 @@ export type LogCallback = (time: string, level: LogLevel, tag: string, ...args: 
 export class Gol {
   private configs: Configs;
   private readonly defaultStyle = "padding: 2px 4px;";
-  private db?: LogsStore;
+  private store?: LogsStore;
   public disable = false;
 
   private static instance: Gol;
@@ -90,17 +90,27 @@ export class Gol {
     this.configs = trueAssign(defaultConfigs, configs);
     debugMode.value = this.configs.debug;
     debug("gol new", loglevel, configs);
+    if (this.configs.persist) {
+      this.initStore();
+    }
+  }
 
-    if (configs?.persist) {
-      if ("storage" in navigator && "getDirectory" in navigator.storage) {
-        this.db = FileStore.getInstance({ expireDay: 2, maxFileSize: this.configs.maxFileSize });
-      } else {
-        this.db = IdbStore.getInstance("gol", {
-          expireTime: this.configs.expireTime,
-          maxCount: this.configs.maxCount,
-        });
-      }
-      this.db.init();
+  private async initStore() {
+    let store: LogsStore;
+    if ("storage" in navigator && "getDirectory" in navigator.storage) {
+      store = FileStore.getInstance({ expireDay: 2, maxFileSize: this.configs.maxFileSize });
+    } else {
+      store = IdbStore.getInstance("gol", {
+        expireTime: this.configs.expireTime,
+        maxCount: this.configs.maxCount,
+      });
+    }
+
+    try {
+      await store.init();
+      this.store = store;
+    } catch (error) {
+      debug("store init failed", error);
     }
   }
 
@@ -130,7 +140,7 @@ export class Gol {
       } else {
         console.log(`${time} [${this.configs.showLevelLabel ? loglevel : " "}: ${tag}]`, ...args);
       }
-      this.db?.save(date.getTime(), tag, loglevel, args);
+      this.store?.save(date.getTime(), tag, loglevel, args);
       this.callback?.(time, loglevel, tag, ...args);
     }
   };
@@ -184,11 +194,11 @@ export class Gol {
   };
 
   report = () => {
-    return this.db?.report();
+    return this.store?.report();
   };
 
   clean = () => {
-    return this.db?.clean();
+    return this.store?.clean();
   };
 }
 
