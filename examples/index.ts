@@ -3,7 +3,7 @@ import { faker } from "@faker-js/faker";
 
 const gol = new Gol(LogLevel.Debug, {
   withStyles: true,
-  persist: true,
+  store: "idb",
   maxCount: 1000,
   expireTime: 30_000,
   debug: true,

@@ -21,7 +21,7 @@ export type Configs = {
   showTime: boolean;
   withStyles: boolean;
   showLevelLabel: boolean;
-  persist: boolean;
+  store: "auto" | "file" | "idb" | "none";
   debug: boolean;
   styles: {
     [key in LogLevel]: TagConfigs;
@@ -33,7 +33,7 @@ const defaultConfigs: Configs = {
   showTime: true,
   showLevelLabel: true,
   withStyles: true,
-  persist: false,
+  store: "auto",
   debug: false,
   styles: {
     Critical: {
@@ -90,16 +90,22 @@ export class Gol {
     this.configs = trueAssign(defaultConfigs, configs);
     debugMode.value = this.configs.debug;
     debug("gol new", loglevel, configs);
-    if (this.configs.persist) {
+    if (this.configs.store !== "none") {
       this.initStore();
     }
   }
 
   private async initStore() {
     let store: LogsStore;
-    if ("storage" in navigator && "getDirectory" in navigator.storage) {
+    if (
+      this.configs.store !== "idb" &&
+      "storage" in navigator &&
+      "getDirectory" in navigator.storage
+    ) {
+      debug("init file store");
       store = FileStore.getInstance({ expireDay: 2, maxFileSize: this.configs.maxFileSize });
     } else {
+      debug("init idb store");
       store = IdbStore.getInstance("gol", {
         expireTime: this.configs.expireTime,
         maxCount: this.configs.maxCount,
@@ -107,8 +113,8 @@ export class Gol {
     }
 
     try {
-      await store.init();
       this.store = store;
+      await store.init();
     } catch (error) {
       debug("store init failed", error);
     }

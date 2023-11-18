@@ -2,7 +2,7 @@ import { LogLevel } from "./Gol";
 import { FileStream, LogsPack } from "./file_stream";
 import { debug } from "./log";
 import { Log, LogsStore } from "./store";
-import { formatTime, getBaseFilename, getFilename, trueAssign } from "./utils";
+import { formatLine, formatTime, getBaseFilename, getFilename, trueAssign } from "./utils";
 
 const MB = 1e6;
 
@@ -66,16 +66,14 @@ export class FileStore implements LogsStore {
 
     debug("file store", this.queue);
     this.queue.forEach((log) => {
-      pack.writeLine(this.formatLine(log.date, log.tag, log.level, log.args));
+      pack.writeLine(formatLine(log.date, log.tag, log.level, log.args));
     });
 
     this.queue = [];
     this.log = pack;
   }
 
-  private formatLine(date: number, tag: string, level: LogLevel, args: unknown[]) {
-    return `${formatTime(new Date(date))} [${level}:${tag}] ${JSON.stringify(args)}\n`;
-  }
+ 
 
   async save(date: number, tag: string, level: LogLevel, args: unknown[]): Promise<void> {
     if (!this.log) {
@@ -83,7 +81,7 @@ export class FileStore implements LogsStore {
       return;
     }
 
-    this.log.writeLine(this.formatLine(date, tag, level, args));
+    this.log.writeLine(formatLine(date, tag, level, args));
   }
 
   async report(): Promise<void | File[]> {

@@ -1,3 +1,5 @@
+import { LogLevel } from "./Gol";
+
 export function formatTime(date: Date) {
   const hours = date.getHours();
   const minutes = date.getMinutes().toString().padStart(2, "0");
@@ -25,6 +27,9 @@ export function trueAssign<T>(target: T, source?: Partial<T>): T {
       target[key] = source[key]!;
     }
   }
-
   return target;
+}
+
+export function formatLine(date: number, tag: string, level: LogLevel, args: unknown[]) {
+  return `${formatTime(new Date(date))} [${level}:${tag}] ${JSON.stringify(args)}\n`;
 }

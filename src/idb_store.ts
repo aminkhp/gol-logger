@@ -1,7 +1,7 @@
 import { DBSchema, IDBPDatabase, IDBPTransaction, openDB } from "idb/with-async-ittr";
 import { LogLevel } from "./Gol";
 import { Log, LogsStore } from "./store";
-import { getFilename, trueAssign } from "./utils";
+import { formatLine, getFilename, trueAssign } from "./utils";
 import { debug } from "./log";
 
 type Stores = ["logs", "metadata"];
@@ -175,6 +175,7 @@ export class IdbStore implements LogsStore {
 
   async save(date: number, tag: string, level: LogLevel, args: unknown[]) {
     if (!this.inited || this.cleaning) {
+      debug("push to queue", date, tag, level, args);
       this.queue.push({ date, tag, level, args });
       return;
     }
@@ -195,8 +196,22 @@ export class IdbStore implements LogsStore {
   // options: { from?: number; to?: number; count?: number }
   async report() {
     if (!this.idb) return Promise.resolve();
-    const logs = await this.idb!.getAll("logs");
-    const file = new File([JSON.stringify(logs)], getFilename(new Date(), 0), {
+
+    const transaction = this.createTransaction("readonly");
+    const logs = transaction!.objectStore("logs");
+
+    const byDate = logs.index("date");
+    const logIt = byDate.iterate(IDBKeyRange.lowerBound(0), "next");
+
+    let data = ""; // if you want json JSON.stringify(logs)
+    for await (const _log of logIt) {
+      const value = _log.value;
+      if (!value) continue;
+
+      data += formatLine(value.date, value.tag, value.level, value.args);
+    }
+
+    const file = new File([data], getFilename(new Date(), 0), {
       type: "text/plain",
     });
 
