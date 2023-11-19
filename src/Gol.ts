@@ -33,7 +33,7 @@ const defaultConfigs: Configs = {
   showTime: true,
   showLevelLabel: true,
   withStyles: true,
-  store: "auto",
+  store: "none",
   debug: false,
   styles: {
     Critical: {
