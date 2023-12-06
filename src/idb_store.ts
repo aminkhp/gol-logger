@@ -164,12 +164,17 @@ export class IdbStore implements LogsStore {
     if (this.queue.length === 0) return;
 
     const logs = transaction.objectStore("logs");
-    for (const log of this.queue) {
-      this.index++;
-      const id = `${this.index}-${log.date}`;
-      logs.put(Object.assign(log, { id }));
-    }
-    await transaction.done;
+    const metadata = transaction.objectStore("metadata");
+
+    try {
+      for (const log of this.queue) {
+        this.index++;
+        const id = `${this.index}-${log.date}`;
+        logs.put(Object.assign(log, { id }));
+      }
+      metadata.put(this.index, "index");
+      await transaction.done;
+    } catch (error) {}
     this.queue = [];
   }
 
@@ -187,10 +192,11 @@ export class IdbStore implements LogsStore {
     const transaction = this.createTransaction("readwrite");
     const logs = transaction.objectStore("logs");
     const metadata = transaction.objectStore("metadata");
-    logs.put?.(_log);
-    metadata.put?.(this.index, "index");
-
-    await transaction.done;
+    try {
+      logs.put?.(_log);
+      metadata.put?.(this.index, "index");
+      await transaction.done;
+    } catch (error) {}
   }
 
   // options: { from?: number; to?: number; count?: number }
