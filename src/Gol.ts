@@ -133,9 +133,9 @@ export class Gol {
   }
 
   private log = (loglevel: LogLevel, tag: string, tagConfigs: TagConfigs, args: any[]) => {
+    const date = new Date();
+    const time = this.formatTime(date);
     if (!this.disable && canLog(loglevel, this.loglevel)) {
-      const date = new Date();
-      const time = this.formatTime(date);
       if (this.configs.withStyles) {
         console.log(
           `${time} %c${this.configs.showLevelLabel ? loglevel : " "}: %c${tag}`,
@@ -146,9 +146,9 @@ export class Gol {
       } else {
         console.log(`${time} [${this.configs.showLevelLabel ? loglevel : " "}: ${tag}]`, ...args);
       }
-      this.store?.save(date.getTime(), tag, loglevel, args);
-      this.callback?.(time, loglevel, tag, ...args);
     }
+    this.callback?.(time, loglevel, tag, ...args);
+    this.store?.save(date.getTime(), tag, loglevel, args);
   };
 
   private formatTime(date: Date) {
