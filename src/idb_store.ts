@@ -57,6 +57,7 @@ export class IdbStore implements LogsStore {
   private inited = false;
   private cleaning: boolean = false;
   private config: StoreConfig;
+  private state: "open" | "closed" | "unknown" = "unknown";
 
   constructor(private name: string, options?: Partial<StoreConfig>) {
     this.config = trueAssign(
@@ -78,6 +79,14 @@ export class IdbStore implements LogsStore {
     return IdbStore.instance;
   }
 
+  private async openDbIfNeeded() {
+    
+    if(this.state !== "open") {
+      this.idb = await openDB(this.name, 1);
+      this.state = "open";
+    }
+  }
+
   async init() {
     this.idb = await openDB<LogsDb>(this.name, 1, {
       upgrade(database, oldVersion, newVersion, transaction, event) {
@@ -87,7 +96,12 @@ export class IdbStore implements LogsStore {
           }
         }
       },
+      terminated: () => {
+        this.state = "closed";
+      },
     });
+
+    this.state = "open";
 
     const transaction = this.createTransaction("readwrite");
     const metadata = transaction.objectStore("metadata");
