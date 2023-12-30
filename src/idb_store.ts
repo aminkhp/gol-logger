@@ -57,6 +57,7 @@ export class IdbStore implements LogsStore {
   private inited = false;
   private cleaning: boolean = false;
   private config: StoreConfig;
+  private state: "opening" | "open" | "closed" | "unknown" = "unknown";
 
   constructor(private name: string, options?: Partial<StoreConfig>) {
     this.config = trueAssign(
@@ -78,6 +79,25 @@ export class IdbStore implements LogsStore {
     return IdbStore.instance;
   }
 
+  private info(...args: unknown[]) {
+    debug(...args);
+    this.save(Date.now(), "Gol", LogLevel.Info, args);
+  }
+
+  private async openTerminatedDB() {
+    this.info("open terminated db", this.state);
+    if (this.state === "opening") return;
+
+    if (this.state !== "open") {
+      this.state = "opening";
+      this.idb = await openDB(this.name, 1);
+      const transaction = this.createTransaction("readwrite");
+      this.info("open terminated db", "opened");
+      await this.checkQueue(transaction as DbTransaction<"readwrite">);
+      this.state = "open";
+    }
+  }
+
   async init() {
     this.idb = await openDB<LogsDb>(this.name, 1, {
       upgrade(database, oldVersion, newVersion, transaction, event) {
@@ -87,7 +107,14 @@ export class IdbStore implements LogsStore {
           }
         }
       },
+      terminated: () => {
+        this.info("terminated");
+        this.state = "closed";
+        this.openTerminatedDB();
+      },
     });
+
+    this.state = "open";
 
     const transaction = this.createTransaction("readwrite");
     const metadata = transaction.objectStore("metadata");
@@ -132,7 +159,7 @@ export class IdbStore implements LogsStore {
       deletes++;
     }
 
-    debug("removeOldLogsByDate", { from: expireDate, deletes });
+    this.info("removeOldLogsByDate", { from: expireDate, deletes });
   }
 
   private async removeOldLogsByCount(transaction: DbTransaction<"readwrite">) {
@@ -154,7 +181,7 @@ export class IdbStore implements LogsStore {
       deletes--;
     }
 
-    debug("removeOldLogsByCount", { deleteSize });
+    this.info("removeOldLogsByCount", { deleteSize });
     this.cleaning = false;
   }
 
@@ -179,7 +206,7 @@ export class IdbStore implements LogsStore {
   }
 
   async save(date: number, tag: string, level: LogLevel, args: unknown[]) {
-    if (!this.inited || this.cleaning) {
+    if (!this.inited || this.cleaning || this.state !== "open") {
       debug("push to queue", date, tag, level, args);
       this.queue.push({ date, tag, level, args });
       return;
