@@ -172,7 +172,7 @@ export class Gol {
   }
 
   public getLogger(tag: string): Logger {
-    return new Logger(tag, Gol.instance);
+    return new Logger(tag, Gol.instance ?? this);
   }
 
   public changeLevel(level: LogLevel) {
